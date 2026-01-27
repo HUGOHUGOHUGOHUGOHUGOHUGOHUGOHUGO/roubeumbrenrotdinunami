@@ -1,3 +1,4 @@
+while true do
 local waves = workspace:WaitForChild("Waves")
 
 while true do
@@ -10,4 +11,5 @@ for _, obj in ipairs(workspace.Waves:GetDescendants()) do
 	if obj:IsA("BasePart") then
 		obj.CanCollide = false
 	end
+end
 end
