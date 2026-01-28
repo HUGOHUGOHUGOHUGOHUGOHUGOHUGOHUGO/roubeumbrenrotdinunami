@@ -2,86 +2,78 @@ local player = game.Players.LocalPlayer
 
 -- ===== GUI =====
 local gui = Instance.new("ScreenGui")
-gui.ResetOnSpawn = false
 gui.Parent = player:WaitForChild("PlayerGui")
-
-local frame = Instance.new("Frame")
-frame.Parent = gui
-frame.Size = UDim2.new(0, 260, 0, 150)
-frame.Position = UDim2.new(0, 150, 0, 150)
-frame.BackgroundColor3 = Color3.fromRGB(30,30,30)
-frame.Active = true
-frame.Draggable = true
-
-local title = Instance.new("TextLabel")
-title.Parent = frame
-title.Size = UDim2.new(1, 0, 0, 35)
-title.Text = "Waves Control"
-title.TextColor3 = Color3.new(1,1,1)
-title.BackgroundTransparency = 1
-title.Font = Enum.Font.GothamBold
-title.TextSize = 18
+gui.ResetOnSpawn = false
 
 local button = Instance.new("TextButton")
-button.Parent = frame
-button.Size = UDim2.new(0, 200, 0, 45)
-button.Position = UDim2.new(0.5, -100, 0, 60)
-button.Text = "ATIVAR"
+button.Parent = gui
+button.Size = UDim2.new(0, 220, 0, 50)
+button.Position = UDim2.new(0, 100, 0, 100)
+button.Text = "ATIVAR WAVES"
 button.BackgroundColor3 = Color3.fromRGB(0,170,0)
 button.TextColor3 = Color3.new(1,1,1)
 button.Font = Enum.Font.GothamBold
-button.TextSize = 15
+button.TextSize = 16
+button.ZIndex = 10
+button.AutoButtonColor = true
 
--- ===== LÓGICA =====
+-- ===== CONTROLE =====
 local ativo = false
-local workspaceConn
-local wavesConn
+local conns = {}
 
-local function aplicar(waves)
-	for _, obj in ipairs(waves:GetDescendants()) do
-		if obj:IsA("BasePart") then
-			obj.CanCollide = false
-			obj:Destroy()
+local function limparConns()
+	for _, c in ipairs(conns) do
+		c:Disconnect()
+	end
+	conns = {}
+end
+
+local function processar(waves)
+	for _, v in ipairs(waves:GetDescendants()) do
+		if v:IsA("BasePart") then
+			v.CanCollide = false
+			v:Destroy()
 		end
 	end
 
-	wavesConn = waves.DescendantAdded:Connect(function(obj)
+	table.insert(conns, waves.DescendantAdded:Connect(function(obj)
 		if obj:IsA("BasePart") then
 			task.wait()
 			obj.CanCollide = false
 			obj:Destroy()
 		end
-	end)
+	end))
 end
 
 local function ativar()
-	local waves = workspace:FindFirstChild("Waves")
-	if waves then
-		aplicar(waves)
+	print("ATIVADO")
+	local w = workspace:FindFirstChild("Waves")
+	if w then
+		processar(w)
 	end
 
-	workspaceConn = workspace.ChildAdded:Connect(function(child)
+	table.insert(conns, workspace.ChildAdded:Connect(function(child)
 		if child.Name == "Waves" then
-			aplicar(child)
+			processar(child)
 		end
-	end)
+	end))
 end
 
 local function desativar()
-	if workspaceConn then workspaceConn:Disconnect() workspaceConn = nil end
-	if wavesConn then wavesConn:Disconnect() wavesConn = nil end
+	print("DESATIVADO")
+	limparConns()
 end
 
--- 🔥 EVENTO CORRETO (NÃO BUGA)
+-- 🔥 BOTÃO (100% FUNCIONAL)
 button.Activated:Connect(function()
 	ativo = not ativo
 
 	if ativo then
-		button.Text = "DESATIVAR"
+		button.Text = "DESATIVAR WAVES"
 		button.BackgroundColor3 = Color3.fromRGB(170,0,0)
 		ativar()
 	else
-		button.Text = "ATIVAR"
+		button.Text = "ATIVAR WAVES"
 		button.BackgroundColor3 = Color3.fromRGB(0,170,0)
 		desativar()
 	end
