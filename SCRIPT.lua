@@ -1,20 +1,3 @@
--- Script (Servidor)
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local evento = ReplicatedStorage:WaitForChild("EventoExemplo")
-
-evento.OnServerEvent:Connect(function(player, acao)
-	if acao == "RemoteEvent" then
-		print(player.Name .. " ativou o script no servidor")
-		
-		-- EXEMPLO: deixar imortal
-		if player.Character and player.Character:FindFirstChild("Humanoid") then
-			player.Character.Humanoid.MaxHealth = math.huge
-			player.Character.Humanoid.Health = math.huge
-		end
-	end
-end)
-
-
 -- carregar biblioteca 
 local Fluent = loadstring(game:HttpGet(
     "https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"
