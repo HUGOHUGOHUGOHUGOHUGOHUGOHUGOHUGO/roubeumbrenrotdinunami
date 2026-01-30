@@ -1,80 +1,101 @@
-local player = game.Players.LocalPlayer
+-- carregar biblioteca 
+local Fluent = loadstring(game:HttpGet(
+    "https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"
+))()
 
--- ===== GUI =====
-local gui = Instance.new("ScreenGui")
-gui.Parent = player:WaitForChild("PlayerGui")
-gui.ResetOnSpawn = false
+-- notificação
+Fluent:Notify({
+    Title = "Executado",
+    Content = "Anti-Waves carregado"
+})
 
-local button = Instance.new("TextButton")
-button.Parent = gui
-button.Size = UDim2.new(0, 220, 0, 50)
-button.Position = UDim2.new(0, 100, 0, 100)
-button.Text = "ATIVAR WAVES"
-button.BackgroundColor3 = Color3.fromRGB(0,170,0)
-button.TextColor3 = Color3.new(1,1,1)
-button.Font = Enum.Font.GothamBold
-button.TextSize = 16
-button.ZIndex = 10
-button.AutoButtonColor = true
+-- janela
+local Window = Fluent:CreateWindow({
+    Title = "Steal a brenrot Hub" .. Fluent.Version,
+    TabWidth = 160,
+    Size = UDim2.fromOffset(420, 260),
+    Theme = "Dark"
+})
 
--- ===== CONTROLE =====
+-- aba única
+local Tab = Window:AddTab({ Title = "Anti-Waves" })
+
+-- ===============================
+-- 🔥 LÓGICA ANTI-WAVES
+-- ===============================
+
 local ativo = false
-local conns = {}
+local workspaceConn
+local wavesConn
 
-local function limparConns()
-	for _, c in ipairs(conns) do
-		c:Disconnect()
-	end
-	conns = {}
+local function limpar()
+    if workspaceConn then
+        workspaceConn:Disconnect()
+        workspaceConn = nil
+    end
+    if wavesConn then
+        wavesConn:Disconnect()
+        wavesConn = nil
+    end
 end
 
-local function processar(waves)
-	for _, v in ipairs(waves:GetDescendants()) do
-		if v:IsA("BasePart") then
-			v.CanCollide = false
-			v:Destroy()
-		end
-	end
+local function processarWaves(waves)
+    -- remove o que já existe
+    for _, obj in ipairs(waves:GetDescendants()) do
+        if obj:IsA("BasePart") then
+            obj.CanCollide = false
+            obj:Destroy()
+        end
+    end
 
-	table.insert(conns, waves.DescendantAdded:Connect(function(obj)
-		if obj:IsA("BasePart") then
-			task.wait()
-			obj.CanCollide = false
-			obj:Destroy()
-		end
-	end))
+    -- remove o que nascer depois
+    wavesConn = waves.DescendantAdded:Connect(function(obj)
+        if obj:IsA("BasePart") then
+            task.wait()
+            obj.CanCollide = false
+            obj:Destroy()
+        end
+    end)
 end
 
 local function ativar()
-	print("ATIVADO")
-	local w = workspace:FindFirstChild("Waves")
-	if w then
-		processar(w)
-	end
+    local w = workspace:FindFirstChild("Waves")
+    if w then
+        processarWaves(w)
+    end
 
-	table.insert(conns, workspace.ChildAdded:Connect(function(child)
-		if child.Name == "Waves" then
-			processar(child)
-		end
-	end))
+    workspaceConn = workspace.ChildAdded:Connect(function(child)
+        if child.Name == "Waves" then
+            processarWaves(child)
+        end
+    end)
 end
 
 local function desativar()
-	print("DESATIVADO")
-	limparConns()
+    limpar()
 end
 
--- 🔥 BOTÃO (100% FUNCIONAL)
-button.Activated:Connect(function()
-	ativo = not ativo
-
-	if ativo then
-		button.Text = "DESATIVAR WAVES"
-		button.BackgroundColor3 = Color3.fromRGB(170,0,0)
-		ativar()
-	else
-		button.Text = "ATIVAR WAVES"
-		button.BackgroundColor3 = Color3.fromRGB(0,170,0)
-		desativar()
-	end
-end)
+-- ===============================
+-- 🔘 TOGGLE ÚNICO
+-- ===============================
+Tab:AddToggle("antiwaves", {
+    Title = "Anti-Waves",
+    Description = "Remove Waves e tira colisão",
+    Default = false,
+    Callback = function(state)
+        ativo = state
+        if state then
+            ativar()
+            Fluent:Notify({
+                Title = "Anti-Waves",
+                Content = "Ligado"
+            })
+        else
+            desativar()
+            Fluent:Notify({
+                Title = "Anti-Waves",
+                Content = "Desligado"
+            })
+        end
+    end
+})
